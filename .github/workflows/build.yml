@@ -20,6 +20,8 @@ jobs:
 
     name: Build (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write   # required to create GitHub Releases
 
     steps:
       - name: Checkout code
@@ -38,7 +40,7 @@ jobs:
       - name: Build & Publish (macOS)
         if: matrix.os == 'macos-latest'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # CSC_LINK: ${{ secrets.CSC_LINK }}           # base64 .p12 cert (optional)
           # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }} # cert password (optional)
         run: npx electron-builder --mac --publish always
@@ -46,13 +48,13 @@ jobs:
       - name: Build & Publish (Windows)
         if: matrix.os == 'windows-latest'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder --win --publish always
 
       - name: Build & Publish (Linux)
         if: matrix.os == 'ubuntu-latest'
         env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: npx electron-builder --linux --publish always
 
       - name: Upload artifacts
