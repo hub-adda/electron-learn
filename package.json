@@ -1,0 +1,51 @@
+{
+  "name": "electron-hello-world",
+  "version": "1.0.0",
+  "description": "A minimal Electron Hello World app",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "build:mac": "electron-builder --mac",
+    "build:win": "electron-builder --win",
+    "build:linux": "electron-builder --linux",
+    "build": "electron-builder --mac --win --linux",
+    "publish": "electron-builder --publish always"
+  },
+  "keywords": ["electron"],
+  "author": "Your Name <you@example.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^34.0.0",
+    "electron-builder": "^25.0.0"
+  },
+  "build": {
+    "appId": "com.example.electron-hello-world",
+    "productName": "HelloWorld",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "src/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        { "target": "dmg", "arch": ["x64", "arm64"] },
+        { "target": "zip", "arch": ["x64", "arm64"] }
+      ]
+    },
+    "win": {
+      "target": [
+        { "target": "nsis", "arch": ["x64"] }
+      ]
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "category": "Utility"
+    },
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    }
+  }
+}
