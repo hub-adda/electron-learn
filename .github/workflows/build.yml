@@ -13,15 +13,16 @@ jobs:
         include:
           - os: macos-latest
             label: macOS
+            args: --mac
           - os: windows-latest
             label: Windows
+            args: --win
           - os: ubuntu-latest
             label: Linux
+            args: --linux
 
     name: Build (${{ matrix.label }})
     runs-on: ${{ matrix.os }}
-    permissions:
-      contents: write   # required to create GitHub Releases
 
     steps:
       - name: Checkout code
@@ -36,30 +37,44 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      # macOS code signing (optional – skip if you have no Apple Developer cert)
-      - name: Build & Publish (macOS)
-        if: matrix.os == 'macos-latest'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # CSC_LINK: ${{ secrets.CSC_LINK }}           # base64 .p12 cert (optional)
-          # CSC_KEY_PASSWORD: ${{ secrets.CSC_KEY_PASSWORD }} # cert password (optional)
-        run: npx electron-builder --mac --publish always
-
-      - name: Build & Publish (Windows)
-        if: matrix.os == 'windows-latest'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --win --publish always
-
-      - name: Build & Publish (Linux)
-        if: matrix.os == 'ubuntu-latest'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --linux --publish always
+      - name: Build
+        run: npx electron-builder ${{ matrix.args }} --publish never
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
           name: dist-${{ matrix.label }}
-          path: dist/
+          path: |
+            dist/*.exe
+            dist/*.dmg
+            dist/*.zip
+            dist/*.AppImage
+            dist/*.deb
+            dist/*.blockmap
+            dist/latest*.yml
           if-no-files-found: ignore
+
+  release:
+    name: Create GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          merge-multiple: true
+
+      - name: List artifacts
+        run: ls -R artifacts/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/**
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
